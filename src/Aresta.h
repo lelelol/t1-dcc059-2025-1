@@ -1,7 +1,9 @@
 #ifndef ARESTA_H
 #define ARESTA_H
+#include <vector>
 
 using namespace std;
+
 class Aresta {
 public:
     Aresta();
@@ -9,7 +11,7 @@ public:
 
     char id_no_alvo;
     int peso;
-    
+    vector<Aresta*> arestas;
 };
 
 

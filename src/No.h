@@ -15,6 +15,9 @@ public:
     char id;
     int peso;
     vector<Aresta*> arestas;
+
+    // FUNÇÕES IMPLEMENTADAS
+    No** getVizinhos(const No** nos, int numNos, int& numVizinhos);
 };
 
 
