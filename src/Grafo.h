@@ -8,6 +8,7 @@
 #include "No.h"
 #include <iostream>
 #include <vector>
+#include <map>
 
 using namespace std;
 class Grafo
@@ -29,12 +30,16 @@ public:
     vector<char> periferia();                                         // h 4
     vector<char> vertices_de_articulacao();                           // i
     void imprimirListaAdjacencias();
+    No *getNoPorId(char id);
     int ordem;
     bool in_direcionado;
     bool in_ponderado_aresta;
     bool in_ponderado_vertice;
     vector<No *> lista_adj;
     vector<Aresta *> arestas;
+
+private:
+    void dfs_inverso(char id_atual, map<char, bool> &visitados);
 };
 
 #endif // GRAFO_H

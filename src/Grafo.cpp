@@ -44,6 +44,17 @@ void Grafo::imprimirListaAdjacencias()
         cout << endl;
     }
 }
+No *Grafo::getNoPorId(char id)
+{
+    for (No *no : this->lista_adj)
+    {
+        if (no->id == id)
+        {
+            return no;
+        }
+    }
+    return nullptr;
+}
 
 vector<char> Grafo::fecho_transitivo_direto(char id_no)
 {
@@ -53,8 +64,52 @@ vector<char> Grafo::fecho_transitivo_direto(char id_no)
 
 vector<char> Grafo::fecho_transitivo_indireto(char id_no)
 {
-    cout << "Metodo nao implementado" << endl;
-    return {};
+    vector<char> fecho;
+    map<char, bool> visitados;
+
+    // Garante que o grafo é direcionado.
+    if (!this->in_direcionado)
+    {
+        cout << "Aviso: Fecho transitivo indireto eh um conceito para grafos direcionados." << endl;
+        return fecho;
+    }
+
+    // Verifica se o nó de entrada existe no grafo.
+    if (getNoPorId(id_no) == nullptr)
+    {
+        cout << "Erro: O no '" << id_no << "' nao existe no grafo." << endl;
+        return fecho;
+    }
+
+    dfs_inverso(id_no, visitados);
+
+    for (auto const &par : visitados)
+    {
+        if (par.second && par.first != id_no)
+        {
+            fecho.push_back(par.first);
+        }
+    }
+
+    return fecho;
+}
+
+void Grafo::dfs_inverso(char id_atual, map<char, bool> &visitados)
+{
+    visitados[id_atual] = true;
+
+    for (Aresta *aresta : this->arestas)
+    {
+        if (aresta->id_no_alvo == id_atual)
+        {
+            char id_pai = aresta->id_no_origem;
+
+            if (visitados.find(id_pai) == visitados.end())
+            {
+                dfs_inverso(id_pai, visitados);
+            }
+        }
+    }
 }
 
 vector<char> Grafo::caminho_minimo_dijkstra(char id_no_a, char id_no_b)
