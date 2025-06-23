@@ -4,16 +4,15 @@
 
 using namespace std;
 
-class Aresta {
+class Aresta
+{
 public:
     Aresta();
     ~Aresta();
 
+    char id_no_origem;
     char id_no_alvo;
     int peso;
-    vector<Aresta*> arestas;
 };
 
-
-
-#endif //ARESTA_H
+#endif // ARESTA_H
