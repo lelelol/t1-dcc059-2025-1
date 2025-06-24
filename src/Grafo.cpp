@@ -1,5 +1,6 @@
 #include "Grafo.h"
-
+#include <algorithm>
+#include <limits>
 Grafo::Grafo()
 {
 }
@@ -67,14 +68,12 @@ vector<char> Grafo::fecho_transitivo_indireto(char id_no)
     vector<char> fecho;
     map<char, bool> visitados;
 
-    // Garante que o grafo é direcionado.
     if (!this->in_direcionado)
     {
         cout << "Aviso: Fecho transitivo indireto eh um conceito para grafos direcionados." << endl;
         return fecho;
     }
 
-    // Verifica se o nó de entrada existe no grafo.
     if (getNoPorId(id_no) == nullptr)
     {
         cout << "Erro: O no '" << id_no << "' nao existe no grafo." << endl;
@@ -126,8 +125,79 @@ vector<char> Grafo::caminho_minimo_floyd(char id_no, char id_no_b)
 
 Grafo *Grafo::arvore_geradora_minima_prim(vector<char> ids_nos)
 {
-    cout << "Metodo nao implementado" << endl;
-    return nullptr;
+
+    if (!this->in_ponderado_aresta)
+    {
+        cout << "O grafo não é ponderado nas arestas." << endl;
+        return nullptr;
+    }
+    if (ids_nos.empty())
+    {
+        cout << "Subconjunto vazio." << endl;
+        return nullptr;
+    }
+
+    vector<Aresta *> arestasInduzidas;
+    for (Aresta *aresta : this->arestas)
+    {
+        bool origem_in_X = (find(ids_nos.begin(), ids_nos.end(), aresta->id_no_origem) != ids_nos.end());
+        bool alvo_in_X = (find(ids_nos.begin(), ids_nos.end(), aresta->id_no_alvo) != ids_nos.end());
+
+        if (origem_in_X && alvo_in_X)
+        {
+            arestasInduzidas.push_back(aresta);
+        }
+    }
+
+    Grafo *agm = new Grafo();
+    agm->in_direcionado = false;
+    agm->in_ponderado_aresta = true;
+
+    map<char, bool> inMST;
+    for (char id : ids_nos)
+    {
+        inMST[id] = false;
+        agm->lista_adj.push_back(this->getNoPorId(id));
+    }
+
+    char no_inicial = ids_nos[0];
+    inMST[no_inicial] = true;
+    int arestas_na_agm = 0;
+
+    while (arestas_na_agm < ids_nos.size() - 1)
+    {
+        Aresta *melhorAresta = nullptr;
+        int pesoMinimo = numeric_limits<int>::max();
+
+        for (Aresta *aresta : arestasInduzidas)
+        {
+            bool ladoA_in = inMST[aresta->id_no_origem];
+            bool ladoB_in = inMST[aresta->id_no_alvo];
+
+            if (ladoA_in != ladoB_in)
+            {
+                if (aresta->peso < pesoMinimo)
+                {
+                    pesoMinimo = aresta->peso;
+                    melhorAresta = aresta;
+                }
+            }
+        }
+
+        if (melhorAresta == nullptr)
+        {
+            cout << "O subconjunto dado não é conexo, arvore nao gerada." << endl;
+            break;
+        }
+
+        agm->arestas.push_back(melhorAresta);
+
+        inMST[melhorAresta->id_no_origem] = true;
+        inMST[melhorAresta->id_no_alvo] = true;
+        arestas_na_agm++;
+    }
+
+    return agm;
 }
 
 Grafo *Grafo::arvore_geradora_minima_kruskal(vector<char> ids_nos)
