@@ -25,13 +25,24 @@ void Gerenciador::comandos(Grafo *grafo)
 
         char id_no = get_id_entrada();
         vector<char> fecho_transitivo_direto = grafo->fecho_transitivo_direto(id_no);
-        cout << "Metodo de impressao em tela nao implementado" << endl
-             << endl;
+        cout << "Fecho transitivo direto: ";
+        for (char v : fecho_transitivo_direto)
+        {
+                cout << v << " ";
+        }
+        cout << endl << endl;
+
 
         if (pergunta_imprimir_arquivo("fecho_trans_dir.txt"))
         {
-            cout << "Metodo de impressao em arquivo nao implementado" << endl
-                 << endl;
+            ofstream out("fecho_trans_dir.txt");
+            for (char v : fecho_transitivo_direto)
+        {
+            out << v << " ";
+        }
+            out << endl;
+            out.close();
+            cout << "Fecho salvo em fecho_trans_dir.txt\n\n";
         }
 
         break;
@@ -137,12 +148,45 @@ void Gerenciador::comandos(Grafo *grafo)
 
             vector<char> ids = get_conjunto_ids(grafo, tam);
             Grafo *arvore_geradora_minima_kruskal = grafo->arvore_geradora_minima_kruskal(ids);
-            cout << "Metodo de impressao em tela nao implementado" << endl
-                 << endl;
+            if (arvore_geradora_minima_kruskal != nullptr)
+{
+    arvore_geradora_minima_kruskal->imprimirListaAdjacencias();
+    cout << endl;
+}
+
 
             if (pergunta_imprimir_arquivo("agm_kruskal.txt"))
             {
-                cout << "Metodo de impressao em arquivo nao implementado" << endl;
+                ofstream out("agm_kruskal.txt");
+for (No *no_origem : arvore_geradora_minima_kruskal->lista_adj)
+{
+    out << no_origem->id << " -> ";
+    for (Aresta *aresta : arvore_geradora_minima_kruskal->arestas)
+    {
+        if (aresta->id_no_origem == no_origem->id)
+        {
+            out << aresta->id_no_alvo;
+            if (grafo->in_ponderado_aresta)
+            {
+                out << "(" << aresta->peso << ")";
+            }
+            out << " ";
+        }
+        else if (!grafo->in_direcionado && aresta->id_no_alvo == no_origem->id)
+        {
+            out << aresta->id_no_origem;
+            if (grafo->in_ponderado_aresta)
+            {
+                out << "(" << aresta->peso << ")";
+            }
+            out << " ";
+        }
+    }
+    out << endl;
+    }
+        out.close();
+        cout << "AGM salva em agm_kruskal.txt\n\n";
+
             }
 
             delete arvore_geradora_minima_kruskal;
