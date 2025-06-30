@@ -59,8 +59,43 @@ No *Grafo::getNoPorId(char id)
 
 vector<char> Grafo::fecho_transitivo_direto(char id_no)
 {
-    cout << "Metodo nao implementado" << endl;
-    return {};
+    vector<char> fecho;
+    map<char, bool> visitados;
+
+    if (!getNoPorId(id_no))
+    {
+        cout << "Erro: O no '" << id_no << "' nao existe no grafo." << endl;
+        return fecho;
+    }
+
+    vector<char> pilha;
+    pilha.push_back(id_no);
+
+    while (!pilha.empty())
+    {
+        char atual = pilha.back();
+        pilha.pop_back();
+
+        if (!visitados[atual])
+        {
+            visitados[atual] = true;
+            if (atual != id_no)
+                fecho.push_back(atual);
+
+            for (Aresta *aresta : this->arestas)
+            {
+                if (aresta->id_no_origem == atual)
+                {
+                    if (!visitados[aresta->id_no_alvo])
+                    {
+                        pilha.push_back(aresta->id_no_alvo);
+                    }
+                }
+            }
+        }
+    }
+
+    return fecho;
 }
 
 vector<char> Grafo::fecho_transitivo_indireto(char id_no)
@@ -202,8 +237,70 @@ Grafo *Grafo::arvore_geradora_minima_prim(vector<char> ids_nos)
 
 Grafo *Grafo::arvore_geradora_minima_kruskal(vector<char> ids_nos)
 {
-    cout << "Metodo nao implementado" << endl;
-    return nullptr;
+    if (!this->in_ponderado_aresta)
+    {
+        cout << "O grafo não é ponderado nas arestas." << endl;
+        return nullptr;
+    }
+
+    if (ids_nos.empty())
+    {
+        cout << "Subconjunto vazio." << endl;
+        return nullptr;
+    }
+
+    // Filtrar arestas do subgrafo induzido
+    vector<Aresta *> arestasInduzidas;
+    for (Aresta *aresta : this->arestas)
+    {
+        bool origem_in = find(ids_nos.begin(), ids_nos.end(), aresta->id_no_origem) != ids_nos.end();
+        bool alvo_in = find(ids_nos.begin(), ids_nos.end(), aresta->id_no_alvo) != ids_nos.end();
+
+        if (origem_in && alvo_in)
+        {
+            arestasInduzidas.push_back(aresta);
+        }
+    }
+
+    // Ordenar arestas por peso
+    sort(arestasInduzidas.begin(), arestasInduzidas.end(),
+         [](Aresta *a, Aresta *b) { return a->peso < b->peso; });
+
+    // Inicializar estrutura de conjuntos
+    map<char, char> pai;
+    for (char id : ids_nos)
+        pai[id] = id;
+
+    function<char(char)> find = [&](char x) {
+        if (pai[x] != x)
+            pai[x] = find(pai[x]);
+        return pai[x];
+    };
+
+    auto unir = [&](char a, char b) {
+        pai[find(a)] = find(b);
+    };
+
+    Grafo *agm = new Grafo();
+    agm->in_direcionado = false;
+    agm->in_ponderado_aresta = true;
+
+    for (char id : ids_nos)
+        agm->lista_adj.push_back(this->getNoPorId(id));
+
+    for (Aresta *aresta : arestasInduzidas)
+    {
+        char u = aresta->id_no_origem;
+        char v = aresta->id_no_alvo;
+
+        if (find(u) != find(v))
+        {
+            unir(u, v);
+            agm->arestas.push_back(aresta);
+        }
+    }
+
+    return agm;
 }
 
 Grafo *Grafo::arvore_caminhamento_profundidade(char id_no)
