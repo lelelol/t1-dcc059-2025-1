@@ -8,6 +8,7 @@ Grafo::Grafo()
 Grafo::~Grafo()
 {
 }
+
 void Grafo::imprimirListaAdjacencias()
 {
     if (this->lista_adj.empty())
@@ -45,6 +46,7 @@ void Grafo::imprimirListaAdjacencias()
         cout << endl;
     }
 }
+
 No *Grafo::getNoPorId(char id)
 {
     for (No *no : this->lista_adj)
@@ -152,10 +154,80 @@ vector<char> Grafo::caminho_minimo_dijkstra(char id_no_a, char id_no_b)
     return {};
 }
 
-vector<char> Grafo::caminho_minimo_floyd(char id_no, char id_no_b)
+vector<char> Grafo::caminho_minimo_floyd(char id_no_a, char id_no_b)
 {
-    cout << "Metodo nao implementado" << endl;
-    return {};
+    int numVertices = this->ordem;
+    vector<char> caminho;
+
+    if (numVertices == 0)
+    {
+        return caminho;
+    }
+
+    vector<vector<int>> dist(numVertices, vector<int>(numVertices, numeric_limits<int>::max()));
+    vector<vector<int>> prox(numVertices, vector<int>(numVertices, -1));
+
+    // Mapa para converter char ID para índice da matriz
+    map<char, int> id_para_indice;
+    for (int i = 0; i < numVertices; ++i)
+    {
+        id_para_indice[this->lista_adj[i]->id] = i;
+    }
+
+    for (int i = 0; i < numVertices; ++i)
+    {
+        dist[i][i] = 0;
+        prox[i][i] = i;
+    }
+
+    for (Aresta *aresta : this->arestas)
+    {
+        int u = id_para_indice[aresta->id_no_origem];
+        int v = id_para_indice[aresta->id_no_alvo];
+        int peso = this->in_ponderado_aresta ? aresta->peso : 1;
+
+        if (dist[u][v] > peso)
+        {
+            dist[u][v] = peso;
+            prox[u][v] = v;
+        }
+        if (!this->in_direcionado && dist[v][u] > peso)
+        {
+            dist[v][u] = peso;
+            prox[v][u] = u;
+        }
+    }
+
+    // Implementação do algoritmo
+    for (int k = 0; k < numVertices; k++)
+    {
+        for (int i = 0; i < numVertices; i++)
+        {
+            for (int j = 0; j < numVertices; j++)
+            {
+                if (dist[i][k] != numeric_limits<int>::max() && dist[k][j] != numeric_limits<int>::max() && dist[i][k] + dist[k][j] < dist[i][j])
+                {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                    prox[i][j] = prox[i][k]; 
+                }
+            }
+        }
+    }
+
+    int u = id_para_indice[id_no_a];
+    int v = id_para_indice[id_no_b];
+
+    if (prox[u][v] == -1)
+        return caminho;
+
+    caminho.push_back(this->lista_adj[u]->id);
+    while (u != v)
+    {
+        u = prox[u][v];
+        caminho.push_back(this->lista_adj[u]->id);
+    }
+
+    return caminho;
 }
 
 Grafo *Grafo::arvore_geradora_minima_prim(vector<char> ids_nos)
