@@ -265,11 +265,32 @@ for (No *no_origem : arvore_geradora_minima_kruskal->lista_adj)
 
     case 'h':
     {
-        vector<char> articulacao = grafo->vertices_de_articulacao();
-        cout << "Metodo de impressao em tela nao implementado" << endl
-             << endl;
+        int r = grafo->raio();
+        if (r != -1) { // Verifica se houve erro
+            cout << "Raio do grafo: " << (r == numeric_limits<int>::max() ? "Infinito" : to_string(r)) << endl;
+        }
 
-        if (pergunta_imprimir_arquivo("arvore_caminhamento_profundidade.txt"))
+        int d = grafo->diametro();
+         if (d != -1) {
+            cout << "Diametro do grafo: " << (d == numeric_limits<int>::max() ? "Infinito" : to_string(d)) << endl;
+        }
+
+        vector<char> c = grafo->centro();
+        cout << "Centro do grafo: { ";
+        for(char id : c) {
+            cout << id << " ";
+        }
+        cout << "}" << endl;
+
+        vector<char> p = grafo->periferia();
+        cout << "Periferia do grafo: { ";
+        for(char id : p) {
+            cout << id << " ";
+        }
+        cout << "}" << endl << endl;
+
+        // A impressão em arquivo pode seguir a mesma lógica
+        if (pergunta_imprimir_arquivo("metricas.txt"))
         {
             cout << "Metodo de impressao em arquivo nao implementado" << endl;
         }

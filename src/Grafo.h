@@ -40,6 +40,7 @@ public:
 
 private:
     void dfs_inverso(char id_atual, map<char, bool> &visitados);
+    map<char, map<char, int>> calcularTodasDistancias(); //auxiliar para diametro e raio
 };
 
 #endif // GRAFO_H
