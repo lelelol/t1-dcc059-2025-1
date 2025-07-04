@@ -1,5 +1,6 @@
 #include "Gerenciador.h"
 #include <fstream>
+#include <limits>
 
 void Gerenciador::comandos(Grafo *grafo)
 {
