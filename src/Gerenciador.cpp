@@ -75,13 +75,39 @@ void Gerenciador::comandos(Grafo *grafo)
 
         char id_no_1 = get_id_entrada();
         char id_no_2 = get_id_entrada();
-        vector<char> caminho_minimo_dijkstra = grafo->caminho_minimo_dijkstra(id_no_1, id_no_2);
-        cout << "Metodo de impressao em tela nao implementado" << endl
-             << endl;
+        vector<char> caminho_minimo = grafo->caminho_minimo_dijkstra(id_no_1, id_no_2);
+
+        if (caminho_minimo.empty())
+        {
+            cout << "Nao existe caminho entre " << id_no_1 << " e " << id_no_2 << "." << endl << endl;
+        }
+        else
+        {
+            cout << "Caminho minimo (Dijkstra): ";
+            for (size_t i = 0; i < caminho_minimo.size(); ++i)
+            {
+                cout << caminho_minimo[i] << (i < caminho_minimo.size() - 1 ? " -> " : "");
+            }
+            cout << endl << endl;
+        }
 
         if (pergunta_imprimir_arquivo("caminho_minimo_dijkstra.txt"))
         {
-            cout << "Metodo de impressao em arquivo nao implementado" << endl;
+            if (!caminho_minimo.empty())
+            {
+                ofstream out("caminho_minimo_dijkstra.txt");
+                for (size_t i = 0; i < caminho_minimo.size(); ++i)
+                {
+                    out << caminho_minimo[i] << (i < caminho_minimo.size() - 1 ? " -> " : "");
+                }
+                out << endl;
+                out.close();
+                cout << "Caminho salvo em caminho_minimo_dijkstra.txt\n\n";
+            }
+            else
+            {
+                cout << "Nenhum caminho para salvar no arquivo." << endl << endl;
+            }
         }
 
         break;

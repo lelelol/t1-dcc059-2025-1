@@ -1,6 +1,10 @@
 #include "Grafo.h"
 #include <algorithm>
 #include <limits>
+#include <map>
+#include <queue>
+#include <vector>
+
 Grafo::Grafo()
 {
 }
@@ -150,8 +154,94 @@ void Grafo::dfs_inverso(char id_atual, map<char, bool> &visitados)
 
 vector<char> Grafo::caminho_minimo_dijkstra(char id_no_a, char id_no_b)
 {
-    cout << "Metodo nao implementado" << endl;
-    return {};
+    // Mapa para armazenar as distâncias mínimas do nó de origem para qualquer outro nó.
+    map<char, int> distancias;
+
+    // Mapa para armazenar o predecessor de cada nó no caminho mais curto.
+    map<char, char> predecessores;
+
+    // Fila de prioridade para selecionar o nó com a menor distância que ainda não foi visitado.
+    // O par armazena a distância e o ID do nó. A fila é de prioridade mínima.
+    priority_queue<pair<int, char>, vector<pair<int, char>>, greater<pair<int, char>>> pq;
+
+    // Inicialização das distâncias de todos os nós como "infinito", exceto o nó de partida.
+    for (No *no : this->lista_adj)
+    {
+        distancias[no->id] = numeric_limits<int>::max();
+        predecessores[no->id] = 0; // 0 representa nenhum predecessor
+    }
+
+    // A distância do nó de partida para ele mesmo é 0.
+    distancias[id_no_a] = 0;
+    pq.push({0, id_no_a});
+
+    while (!pq.empty())
+    {
+        char u_id = pq.top().second;
+        pq.pop();
+
+        No *u_no = getNoPorId(u_id);
+        if (!u_no)
+            continue; // Se o nó não for encontrado, continue
+
+        // Para cada aresta que sai do nó 'u'
+        for (Aresta *aresta : this->arestas)
+        {
+            if (aresta->id_no_origem == u_id)
+            {
+                char v_id = aresta->id_no_alvo;
+                int peso = this->in_ponderado_aresta ? aresta->peso : 1;
+
+                // Relaxamento da aresta
+                if (distancias[u_id] != numeric_limits<int>::max() && distancias[u_id] + peso < distancias[v_id])
+                {
+                    distancias[v_id] = distancias[u_id] + peso;
+                    predecessores[v_id] = u_id;
+                    pq.push({distancias[v_id], v_id});
+                }
+            }
+            // Se o grafo não for direcionado, considerar a aresta no sentido inverso também
+            else if (!this->in_direcionado && aresta->id_no_alvo == u_id)
+            {
+                char v_id = aresta->id_no_origem;
+                int peso = this->in_ponderado_aresta ? aresta->peso : 1;
+
+                if (distancias[u_id] != numeric_limits<int>::max() && distancias[u_id] + peso < distancias[v_id])
+                {
+                    distancias[v_id] = distancias[u_id] + peso;
+                    predecessores[v_id] = u_id;
+                    pq.push({distancias[v_id], v_id});
+                }
+            }
+        }
+    }
+
+    // Reconstrução do caminho do nó de destino de volta para o nó de origem.
+    vector<char> caminho;
+    char no_atual = id_no_b;
+
+    // Se não houver predecessor para o nó de destino (exceto se for o nó de origem), não há caminho.
+    if (predecessores[no_atual] == 0 && no_atual != id_no_a)
+    {
+        return caminho; // Retorna um vetor vazio
+    }
+
+    while (no_atual != 0)
+    {
+        caminho.push_back(no_atual);
+        no_atual = predecessores[no_atual];
+    }
+
+    // O caminho foi construído de trás para frente, então é preciso invertê-lo.
+    reverse(caminho.begin(), caminho.end());
+
+    // Se o caminho não começar com o nó de origem, significa que não há caminho.
+    if (caminho.front() != id_no_a)
+    {
+        return {}; // Retorna um vetor vazio
+    }
+
+    return caminho;
 }
 
 vector<char> Grafo::caminho_minimo_floyd(char id_no_a, char id_no_b)
