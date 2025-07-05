@@ -251,16 +251,50 @@ for (No *no_origem : arvore_geradora_minima_kruskal->lista_adj)
     {
 
         char id_no = get_id_entrada();
-        Grafo *arvore_caminhamento_profundidade = grafo->arvore_caminhamento_profundidade(id_no);
-        cout << "Metodo de impressao em tela nao implementado" << endl
-             << endl;
+        Grafo *arvore = grafo->arvore_caminhamento_profundidade(id_no);
 
-        if (pergunta_imprimir_arquivo("arvore_caminhamento_profundidade.txt"))
+        if (arvore != nullptr)
         {
-            cout << "Metodo de impressao em arquivo nao implementado" << endl;
-        }
+            cout << "\nArvore de caminhamento em profundidade gerada:" << endl;
+            arvore->imprimirListaAdjacencias();
+            cout << endl;
 
-        delete arvore_caminhamento_profundidade;
+            if (pergunta_imprimir_arquivo("arvore_caminhamento_profundidade.txt"))
+            {
+                ofstream out("arvore_caminhamento_profundidade.txt");
+                if (!out.is_open())
+                {
+                    cout << "Erro ao abrir o arquivo para escrita." << endl;
+                }
+                else
+                {
+                    for (No *no_origem : arvore->lista_adj)
+                    {
+                        out << no_origem->id << " -> ";
+                        for (Aresta *aresta : arvore->arestas)
+                        {
+                            if (aresta->id_no_origem == no_origem->id)
+                            {
+                                out << aresta->id_no_alvo;
+                                if (arvore->in_ponderado_aresta)
+                                    out << "(" << aresta->peso << ")";
+                                out << " ";
+                            }
+                            else if (!arvore->in_direcionado && aresta->id_no_alvo == no_origem->id)
+                            {
+                                out << aresta->id_no_origem;
+                                if (arvore->in_ponderado_aresta)
+                                    out << "(" << aresta->peso << ")";
+                                out << " ";
+                            }
+                        }
+                        out << endl;
+                    }
+                    cout << "Arvore salva em arvore_caminhamento_profundidade.txt\n\n";
+                }
+            }
+            delete arvore;
+        }
         break;
     }
 

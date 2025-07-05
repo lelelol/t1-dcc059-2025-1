@@ -454,8 +454,73 @@ Grafo *Grafo::arvore_geradora_minima_kruskal(vector<char> ids_nos)
 
 Grafo *Grafo::arvore_caminhamento_profundidade(char id_no)
 {
-    cout << "Metodo nao implementado" << endl;
-    return nullptr;
+    if (getNoPorId(id_no) == nullptr)
+    {
+        cout << "Erro: O no inicial '" << id_no << "' nao existe no grafo." << endl;
+        return nullptr;
+    }
+
+    Grafo *arvore = new Grafo();
+    arvore->in_direcionado = this->in_direcionado;
+    arvore->in_ponderado_aresta = this->in_ponderado_aresta;
+    arvore->in_ponderado_vertice = this->in_ponderado_vertice;
+    arvore->ordem = 0;
+
+    // 0: branco (não visitado), 1: cinza (sendo visitado), 2: preto (totalmente visitado).
+    map<char, int> cor;
+    for (No *no : this->lista_adj)
+    {
+        cor[no->id] = 0;
+    }
+
+    cout << "Iniciando busca em profundidade a partir de '" << id_no << "'." << endl;
+    cout << "Arestas de retorno (nao pertencem a arvore):" << endl;
+
+    // Função recursiva para a DFS
+    function<void(char)> dfs_visit;
+    dfs_visit = [&](char u_id)
+    {
+        // Marca o nó como cinza e o adiciona à árvore.
+        cor[u_id] = 1;
+        arvore->lista_adj.push_back(this->getNoPorId(u_id));
+        arvore->ordem++;
+
+        // Itera sobre todas as arestas para encontrar os vizinhos de u_id
+        for (Aresta *aresta : this->arestas)
+        {
+            char v_id = 0;
+            bool eh_vizinho = false;
+
+            if (aresta->id_no_origem == u_id)
+            {
+                v_id = aresta->id_no_alvo;
+                eh_vizinho = true;
+            }
+            else if (!this->in_direcionado && aresta->id_no_alvo == u_id)
+            {
+                v_id = aresta->id_no_origem;
+                eh_vizinho = true;
+            }
+
+            if (eh_vizinho)
+            {
+                if (cor[v_id] == 0) // Se o vizinho é branco (não visitado)
+                {
+                    arvore->arestas.push_back(aresta); // É uma aresta de árvore
+                    dfs_visit(v_id);                   // Visita o vizinho
+                }
+                else if (cor[v_id] == 1) // Se o vizinho é cinza (sendo visitado)
+                {
+                    cout << "  - Aresta de retorno: " << u_id << " -> " << v_id << endl;
+                }
+            }
+        }
+        cor[u_id] = 2; // Marca o nó como "visitado" (preto)
+    };
+
+    dfs_visit(id_no);
+
+    return arvore;
 }
 
 map<char, map<char, int>> Grafo::calcularTodasDistancias()
