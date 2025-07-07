@@ -1,6 +1,8 @@
 #include "Gerenciador.h"
 #include <fstream>
 #include <limits>
+#include <vector>
+#include <iostream>
 
 void Gerenciador::comandos(Grafo *grafo)
 {
@@ -23,35 +25,32 @@ void Gerenciador::comandos(Grafo *grafo)
     {
     case 'a':
     {
-
         char id_no = get_id_entrada();
         vector<char> fecho_transitivo_direto = grafo->fecho_transitivo_direto(id_no);
         cout << "Fecho transitivo direto: ";
         for (char v : fecho_transitivo_direto)
         {
-                cout << v << " ";
+            cout << v << " ";
         }
-        cout << endl << endl;
-
+        cout << endl
+             << endl;
 
         if (pergunta_imprimir_arquivo("fecho_trans_dir.txt"))
         {
             ofstream out("fecho_trans_dir.txt");
             for (char v : fecho_transitivo_direto)
-        {
-            out << v << " ";
-        }
+            {
+                out << v << " ";
+            }
             out << endl;
             out.close();
             cout << "Fecho salvo em fecho_trans_dir.txt\n\n";
         }
-
         break;
     }
 
     case 'b':
     {
-
         char id_no = get_id_entrada();
         vector<char> fecho_transitivo_indireto = grafo->fecho_transitivo_indireto(id_no);
         cout << "Fecho transitivo indireto: ";
@@ -64,23 +63,28 @@ void Gerenciador::comandos(Grafo *grafo)
 
         if (pergunta_imprimir_arquivo("fecho_trans_indir.txt"))
         {
-            cout << "Metodo de impressao em arquivo nao implementado" << endl;
+            ofstream out("fecho_trans_indir.txt");
+            for (char v : fecho_transitivo_indireto)
+            {
+                out << v << " ";
+            }
+            out << endl;
+            out.close();
+            cout << "Fecho salvo em fecho_trans_indir.txt\n\n";
         }
-
-        ;
         break;
     }
 
     case 'c':
     {
-
         char id_no_1 = get_id_entrada();
         char id_no_2 = get_id_entrada();
         vector<char> caminho_minimo = grafo->caminho_minimo_dijkstra(id_no_1, id_no_2);
 
         if (caminho_minimo.empty())
         {
-            cout << "Nao existe caminho entre " << id_no_1 << " e " << id_no_2 << "." << endl << endl;
+            cout << "Nao existe caminho entre " << id_no_1 << " e " << id_no_2 << "." << endl
+                 << endl;
         }
         else
         {
@@ -89,7 +93,8 @@ void Gerenciador::comandos(Grafo *grafo)
             {
                 cout << caminho_minimo[i] << (i < caminho_minimo.size() - 1 ? " -> " : "");
             }
-            cout << endl << endl;
+            cout << endl
+                 << endl;
         }
 
         if (pergunta_imprimir_arquivo("caminho_minimo_dijkstra.txt"))
@@ -107,20 +112,19 @@ void Gerenciador::comandos(Grafo *grafo)
             }
             else
             {
-                cout << "Nenhum caminho para salvar no arquivo." << endl << endl;
+                cout << "Nenhum caminho para salvar no arquivo." << endl
+                     << endl;
             }
         }
-
         break;
     }
 
     case 'd':
     {
-
         char id_no_1 = get_id_entrada();
         char id_no_2 = get_id_entrada();
         vector<char> caminho_minimo_floyd = grafo->caminho_minimo_floyd(id_no_1, id_no_2);
-        
+
         if (caminho_minimo_floyd.empty())
         {
             cout << "Nao existe caminho entre " << id_no_1 << " e " << id_no_2 << "." << endl
@@ -139,117 +143,142 @@ void Gerenciador::comandos(Grafo *grafo)
 
         if (pergunta_imprimir_arquivo("caminho_minimo_floyd.txt"))
         {
-            ofstream out("caminho_minimo_floyd.txt");
-            for (size_t i = 0; i < caminho_minimo_floyd.size(); ++i)
+            if (!caminho_minimo_floyd.empty())
             {
-                out << caminho_minimo_floyd[i] << (i < caminho_minimo_floyd.size() - 1 ? " -> " : "");
+                ofstream out("caminho_minimo_floyd.txt");
+                for (size_t i = 0; i < caminho_minimo_floyd.size(); ++i)
+                {
+                    out << caminho_minimo_floyd[i] << (i < caminho_minimo_floyd.size() - 1 ? " -> " : "");
+                }
+                out << endl;
+                out.close();
+                cout << "Caminho salvo em caminho_minimo_floyd.txt\n\n";
             }
-            out << endl;
-            out.close();
-            cout << "Caminho salvo em caminho_minimo_floyd.txt\n\n";
+            else
+            {
+                cout << "Nenhum caminho para salvar no arquivo." << endl
+                     << endl;
+            }
         }
-
         break;
     }
+
     case 'e':
     {
-
         int tam;
         cout << "Digite o tamanho do subconjunto: ";
         cin >> tam;
 
         if (tam > 0 && tam <= grafo->ordem)
         {
-
             vector<char> ids = get_conjunto_ids(grafo, tam);
             Grafo *arvore_geradora_minima_prim = grafo->arvore_geradora_minima_prim(ids);
             if (arvore_geradora_minima_prim != nullptr)
             {
-
                 arvore_geradora_minima_prim->imprimirListaAdjacencias();
                 cout << endl;
-            }
-            if (pergunta_imprimir_arquivo("agm_prim.txt"))
-            {
-                cout << "Metodo de impressao em arquivo nao implementado" << endl;
-            }
 
-            delete arvore_geradora_minima_prim;
+                if (pergunta_imprimir_arquivo("agm_prim.txt"))
+                {
+                    ofstream out("agm_prim.txt");
+                    for (No *no_origem : arvore_geradora_minima_prim->lista_adj)
+                    {
+                        out << no_origem->id << " -> ";
+                        for (Aresta *aresta : arvore_geradora_minima_prim->arestas)
+                        {
+                            if (aresta->id_no_origem == no_origem->id)
+                            {
+                                out << aresta->id_no_alvo;
+                                if (grafo->in_ponderado_aresta)
+                                {
+                                    out << "(" << aresta->peso << ")";
+                                }
+                                out << " ";
+                            }
+                            else if (!grafo->in_direcionado && aresta->id_no_alvo == no_origem->id)
+                            {
+                                out << aresta->id_no_origem;
+                                if (grafo->in_ponderado_aresta)
+                                {
+                                    out << "(" << aresta->peso << ")";
+                                }
+                                out << " ";
+                            }
+                        }
+                        out << endl;
+                    }
+                    out.close();
+                    cout << "AGM (Prim) salva em agm_prim.txt\n\n";
+                }
+                delete arvore_geradora_minima_prim;
+            }
         }
         else
         {
             cout << "Valor invalido" << endl;
         }
-
         break;
     }
 
     case 'f':
     {
-
         int tam;
         cout << "Digite o tamanho do subconjunto: ";
         cin >> tam;
 
         if (tam > 0 && tam <= grafo->ordem)
         {
-
             vector<char> ids = get_conjunto_ids(grafo, tam);
             Grafo *arvore_geradora_minima_kruskal = grafo->arvore_geradora_minima_kruskal(ids);
             if (arvore_geradora_minima_kruskal != nullptr)
-{
-    arvore_geradora_minima_kruskal->imprimirListaAdjacencias();
-    cout << endl;
-}
-
-
-            if (pergunta_imprimir_arquivo("agm_kruskal.txt"))
             {
-                ofstream out("agm_kruskal.txt");
-for (No *no_origem : arvore_geradora_minima_kruskal->lista_adj)
-{
-    out << no_origem->id << " -> ";
-    for (Aresta *aresta : arvore_geradora_minima_kruskal->arestas)
-    {
-        if (aresta->id_no_origem == no_origem->id)
-        {
-            out << aresta->id_no_alvo;
-            if (grafo->in_ponderado_aresta)
-            {
-                out << "(" << aresta->peso << ")";
-            }
-            out << " ";
-        }
-        else if (!grafo->in_direcionado && aresta->id_no_alvo == no_origem->id)
-        {
-            out << aresta->id_no_origem;
-            if (grafo->in_ponderado_aresta)
-            {
-                out << "(" << aresta->peso << ")";
-            }
-            out << " ";
-        }
-    }
-    out << endl;
-    }
-        out.close();
-        cout << "AGM salva em agm_kruskal.txt\n\n";
+                arvore_geradora_minima_kruskal->imprimirListaAdjacencias();
+                cout << endl;
 
+                if (pergunta_imprimir_arquivo("agm_kruskal.txt"))
+                {
+                    ofstream out("agm_kruskal.txt");
+                    for (No *no_origem : arvore_geradora_minima_kruskal->lista_adj)
+                    {
+                        out << no_origem->id << " -> ";
+                        for (Aresta *aresta : arvore_geradora_minima_kruskal->arestas)
+                        {
+                            if (aresta->id_no_origem == no_origem->id)
+                            {
+                                out << aresta->id_no_alvo;
+                                if (grafo->in_ponderado_aresta)
+                                {
+                                    out << "(" << aresta->peso << ")";
+                                }
+                                out << " ";
+                            }
+                            else if (!grafo->in_direcionado && aresta->id_no_alvo == no_origem->id)
+                            {
+                                out << aresta->id_no_origem;
+                                if (grafo->in_ponderado_aresta)
+                                {
+                                    out << "(" << aresta->peso << ")";
+                                }
+                                out << " ";
+                            }
+                        }
+                        out << endl;
+                    }
+                    out.close();
+                    cout << "AGM (Kruskal) salva em agm_kruskal.txt\n\n";
+                }
+                delete arvore_geradora_minima_kruskal;
             }
-
-            delete arvore_geradora_minima_kruskal;
         }
         else
         {
             cout << "Valor invalido" << endl;
         }
-
         break;
     }
 
     case 'g':
     {
-
         char id_no = get_id_entrada();
         Grafo *arvore = grafo->arvore_caminhamento_profundidade(id_no);
 
@@ -292,6 +321,7 @@ for (No *no_origem : arvore_geradora_minima_kruskal->lista_adj)
                     }
                     cout << "Arvore salva em arvore_caminhamento_profundidade.txt\n\n";
                 }
+                out.close();
             }
             delete arvore;
         }
@@ -301,49 +331,95 @@ for (No *no_origem : arvore_geradora_minima_kruskal->lista_adj)
     case 'h':
     {
         int r = grafo->raio();
-        if (r != -1) { // Verifica se houve erro
+        int d = grafo->diametro();
+        vector<char> c = grafo->centro();
+        vector<char> p = grafo->periferia();
+
+        if (r != -1)
+        {
             cout << "Raio do grafo: " << (r == numeric_limits<int>::max() ? "Infinito" : to_string(r)) << endl;
         }
-
-        int d = grafo->diametro();
-         if (d != -1) {
+        if (d != -1)
+        {
             cout << "Diametro do grafo: " << (d == numeric_limits<int>::max() ? "Infinito" : to_string(d)) << endl;
         }
 
-        vector<char> c = grafo->centro();
         cout << "Centro do grafo: { ";
-        for(char id : c) {
+        for (char id : c)
+        {
             cout << id << " ";
         }
         cout << "}" << endl;
 
-        vector<char> p = grafo->periferia();
         cout << "Periferia do grafo: { ";
-        for(char id : p) {
+        for (char id : p)
+        {
             cout << id << " ";
         }
-        cout << "}" << endl << endl;
-
-        // A impressão em arquivo pode seguir a mesma lógica
-        if (pergunta_imprimir_arquivo("metricas.txt"))
-        {
-            cout << "Metodo de impressao em arquivo nao implementado" << endl;
-        }
-
-        break;
-    }
-    case 'i':
-    {
-
-        vector<char> articulacao = grafo->vertices_de_articulacao();
-        cout << "Metodo de impressao em tela nao implementado" << endl
+        cout << "}" << endl
              << endl;
 
-        if (pergunta_imprimir_arquivo("arvore_caminhamento_profundidade.txt"))
+        if (pergunta_imprimir_arquivo("metricas.txt"))
         {
-            cout << "Metodo de impressao em arquivo nao implementado" << endl;
-        }
+            ofstream out("metricas.txt");
+            if (r != -1)
+                out << "Raio: " << (r == numeric_limits<int>::max() ? "Infinito" : to_string(r)) << endl;
+            if (d != -1)
+                out << "Diametro: " << (d == numeric_limits<int>::max() ? "Infinito" : to_string(d)) << endl;
 
+            out << "Centro: { ";
+            for (char id : c)
+                out << id << " ";
+            out << "}" << endl;
+
+            out << "Periferia: { ";
+            for (char id : p)
+                out << id << " ";
+            out << "}" << endl;
+
+            out.close();
+            cout << "Metricas salvas em metricas.txt\n\n";
+        }
+        break;
+    }
+
+    case 'i':
+    {
+        vector<char> articulacao = grafo->vertices_de_articulacao();
+        cout << "Vertices de Articulacao: { ";
+        if (articulacao.empty())
+        {
+            cout << "Nenhum";
+        }
+        else
+        {
+            for (char id : articulacao)
+            {
+                cout << id << " ";
+            }
+        }
+        cout << "}" << endl
+             << endl;
+
+        if (pergunta_imprimir_arquivo("articulacoes.txt"))
+        {
+            ofstream out("articulacoes.txt");
+            out << "Vertices de Articulacao: { ";
+            if (articulacao.empty())
+            {
+                out << "Nenhum";
+            }
+            else
+            {
+                for (char id : articulacao)
+                {
+                    out << id << " ";
+                }
+            }
+            out << "}" << endl;
+            out.close();
+            cout << "Vertices de articulacao salvos em articulacoes.txt\n\n";
+        }
         break;
     }
 
@@ -372,6 +448,7 @@ char Gerenciador::get_id_entrada()
 vector<char> Gerenciador::get_conjunto_ids(Grafo *grafo, int tam)
 {
     vector<char> ids = {};
+    cout << "Digite os " << tam << " ids do subconjunto:" << endl;
     while ((int)ids.size() < tam)
     {
         char id_no = get_id_entrada();
@@ -402,24 +479,30 @@ vector<char> Gerenciador::get_conjunto_ids(Grafo *grafo, int tam)
             }
         }
     }
-
     return ids;
 }
 
 bool Gerenciador::pergunta_imprimir_arquivo(string nome_arquivo)
 {
-
     cout << "Imprimir em arquivo externo? (" << nome_arquivo << ")" << endl;
     cout << "(1) Sim;" << endl;
     cout << "(2) Nao." << endl;
     int resp;
     cin >> resp;
+
+    while (cin.fail())
+    {
+        cout << "Entrada invalida. Por favor, digite 1 para Sim ou 2 para Nao." << endl;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin >> resp;
+    }
+
     cout << endl;
 
     switch (resp)
     {
     case 1:
-
         return true;
     case 2:
         return false;
