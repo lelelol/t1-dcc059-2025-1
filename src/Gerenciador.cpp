@@ -16,6 +16,8 @@ void Gerenciador::comandos(Grafo *grafo)
     cout << "(f) Arvore Geradora Minima (Algoritmo de Kruskal);" << endl;
     cout << "(g) Arvore de caminhamento em profundidade;" << endl;
     cout << "(h) Raio, diametro, centro e periferia do grafo;" << endl;
+    cout << "(i) Encontrar um Conjunto 2-Dominante (heuristica gulosa);" << endl; // <-- NOVA OPÇÃO
+
     cout << "(0) Sair;" << endl
          << endl;
 
@@ -385,15 +387,15 @@ void Gerenciador::comandos(Grafo *grafo)
 
     case 'i':
     {
-        vector<char> articulacao = grafo->vertices_de_articulacao();
-        cout << "Vertices de Articulacao: { ";
-        if (articulacao.empty())
+        vector<char> c2d = grafo->conjunto_2_dominante_guloso();
+        cout << "Conjunto 2-Dominante (heuristica gulosa): { ";
+        if (c2d.empty())
         {
             cout << "Nenhum";
         }
         else
         {
-            for (char id : articulacao)
+            for (char id : c2d)
             {
                 cout << id << " ";
             }
@@ -401,24 +403,24 @@ void Gerenciador::comandos(Grafo *grafo)
         cout << "}" << endl
              << endl;
 
-        if (pergunta_imprimir_arquivo("articulacoes.txt"))
+        if (pergunta_imprimir_arquivo("conjunto_2_dominante.txt"))
         {
-            ofstream out("articulacoes.txt");
-            out << "Vertices de Articulacao: { ";
-            if (articulacao.empty())
+            ofstream out("conjunto_2_dominante.txt");
+            out << "Conjunto 2-Dominante (heuristica gulosa): { ";
+            if (c2d.empty())
             {
                 out << "Nenhum";
             }
             else
             {
-                for (char id : articulacao)
+                for (char id : c2d)
                 {
                     out << id << " ";
                 }
             }
             out << "}" << endl;
             out.close();
-            cout << "Vertices de articulacao salvos em articulacoes.txt\n\n";
+            cout << "Conjunto 2-Dominante salvo em conjunto_2_dominante.txt\n\n";
         }
         break;
     }

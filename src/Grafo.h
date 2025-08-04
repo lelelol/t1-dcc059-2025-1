@@ -28,7 +28,7 @@ public:
     int diametro();                                                   // h 2
     vector<char> centro();                                            // h 3
     vector<char> periferia();                                         // h 4
-    vector<char> vertices_de_articulacao();                           // i
+    vector<char> conjunto_2_dominante_guloso();                       // i
     void imprimirListaAdjacencias();
     No *getNoPorId(char id);
     int ordem;
@@ -40,7 +40,7 @@ public:
 
 private:
     void dfs_inverso(char id_atual, map<char, bool> &visitados);
-    map<char, map<char, int>> calcularTodasDistancias(); //auxiliar para diametro e raio
+    map<char, map<char, int>> calcularTodasDistancias(); // auxiliar para diametro e raio
 };
 
 #endif // GRAFO_H

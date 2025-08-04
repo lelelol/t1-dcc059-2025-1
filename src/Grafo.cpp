@@ -5,6 +5,7 @@
 #include <queue>
 #include <vector>
 #include <functional>
+#include <set>
 
 Grafo::Grafo()
 {
@@ -749,8 +750,112 @@ vector<char> Grafo::periferia()
     return periferia_nodes;
 }
 
-vector<char> Grafo::vertices_de_articulacao()
+vector<char> Grafo::conjunto_2_dominante_guloso()
 {
-    cout << "Metodo nao implementado" << endl;
-    return {};
+    vector<char> D;
+    if (this->ordem == 0)
+    {
+        return D;
+    }
+
+    map<char, int> dominadores_por_vertice;
+    for (No *no : this->lista_adj)
+    {
+        dominadores_por_vertice[no->id] = 0;
+    }
+
+    set<char> vertices_nao_satisfeitos;
+    for (No *no : this->lista_adj)
+    {
+        vertices_nao_satisfeitos.insert(no->id);
+    }
+
+    while (!vertices_nao_satisfeitos.empty())
+    {
+        char melhor_vertice_para_adicionar = 0;
+        int max_score = -1;
+
+        for (No *candidato_no : this->lista_adj)
+        {
+            char id_candidato = candidato_no->id;
+            bool ja_em_D = find(D.begin(), D.end(), id_candidato) != D.end();
+            if (ja_em_D)
+            {
+                continue;
+            }
+
+            int score_atual = 0;
+            if (vertices_nao_satisfeitos.count(id_candidato))
+            {
+                score_atual++;
+            }
+            for (Aresta *aresta : this->arestas)
+            {
+                char id_vizinho = 0;
+                if (aresta->id_no_origem == id_candidato)
+                    id_vizinho = aresta->id_no_alvo;
+                else if (!this->in_direcionado && aresta->id_no_alvo == id_candidato)
+                    id_vizinho = aresta->id_no_origem;
+
+                if (id_vizinho != 0 && vertices_nao_satisfeitos.count(id_vizinho))
+                {
+                    if (dominadores_por_vertice[id_vizinho] < 2)
+                    {
+                        score_atual++;
+                    }
+                }
+            }
+
+            if (score_atual > max_score)
+            {
+                max_score = score_atual;
+                melhor_vertice_para_adicionar = id_candidato;
+            }
+        }
+
+        if (melhor_vertice_para_adicionar == 0)
+        {
+
+            if (!vertices_nao_satisfeitos.empty())
+            {
+                melhor_vertice_para_adicionar = *vertices_nao_satisfeitos.begin();
+            }
+            else
+            {
+                break; // Todos satisfeitos
+            }
+        }
+
+        D.push_back(melhor_vertice_para_adicionar);
+
+        for (Aresta *aresta : this->arestas)
+        {
+            if (aresta->id_no_origem == melhor_vertice_para_adicionar)
+            {
+                dominadores_por_vertice[aresta->id_no_alvo]++;
+            }
+            else if (!this->in_direcionado && aresta->id_no_alvo == melhor_vertice_para_adicionar)
+            {
+                dominadores_por_vertice[aresta->id_no_origem]++;
+            }
+        }
+
+        vector<char> para_remover;
+        for (char id_nao_satisfeito : vertices_nao_satisfeitos)
+        {
+            bool esta_em_D = find(D.begin(), D.end(), id_nao_satisfeito) != D.end();
+            if (esta_em_D || dominadores_por_vertice[id_nao_satisfeito] >= 2)
+            {
+                para_remover.push_back(id_nao_satisfeito);
+            }
+        }
+
+        for (char id_remover : para_remover)
+        {
+            vertices_nao_satisfeitos.erase(id_remover);
+        }
+    }
+
+    sort(D.begin(), D.end());
+    return D;
 }
