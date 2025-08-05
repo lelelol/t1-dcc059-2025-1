@@ -28,7 +28,7 @@ public:
     int diametro();                                                   // h 2
     vector<char> centro();                                            // h 3
     vector<char> periferia();                                         // h 4
-    vector<char> conjunto_2_dominante_guloso();                       // i
+    vector<char> conjunto_dominante_distancia2_guloso();              // i
     void imprimirListaAdjacencias();
     No *getNoPorId(char id);
     int ordem;

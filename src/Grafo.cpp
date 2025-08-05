@@ -7,7 +7,6 @@
 #include <functional>
 #include <set>
 
-
 Grafo::Grafo()
 {
 }
@@ -751,64 +750,85 @@ vector<char> Grafo::periferia()
     return periferia_nodes;
 }
 
-//Encontrar um subconjunto de vértices D de um grafo, tal que todo vértice v que não está em D seja adjacente a pelo menos dois vértices em D
-//D: Conjunto dominante
-//dominadores_por_vertice: Armazena, para cada vértice do gŕafico, quantos de seus vizinhos já foram armazenados em D.
-//vertices_nao_satisfeitos: Contém todos os vértices que ainda não cumprem a condição de 2-dominação (ou seja, não estão em D e não têm pelo menos 2 vizinhos em D). O algoritmo termina quando esta lista fica vazia.
-//Quanto melhor for a adição daquele vértice pro algoritmo, maior sera o seu score
-//Iremos acrescentar uma função que verifica se o grafo resultante realmente resolve o problema
-vector<char> Grafo::conjunto_2_dominante_guloso()
+// Encontrar um subconjunto de vértices D tal que todo vértice fora de D esteja
+// a uma distância máxima de 2 de, pelo menos, um vértice que está em D.
+//
+// 1. D: O conjunto de "dominadores" que o algoritmo constrói passo a passo.
+// 2. nao_cobertos: Controla os vértices que ainda precisam de cobertura. O algoritmo
+//    só termina quando este conjunto fica vazio.
+// 3. CRITÉRIO GULOSO: A cada iteração, escolhe-se o vértice com o maior "score".
+// 4. SCORE: É o número de vértices em 'nao_cobertos' que um candidato consegue
+//    alcançar (em distância 0, 1 ou 2).
+//
+// PENDENTE: Implementar uma função de verificação para validar o resultado.
+vector<char> Grafo::conjunto_dominante_distancia2_guloso()
 {
-    set<char> D_set;
+    vector<char> D;
     if (this->ordem == 0)
     {
-        return {};
+        return D;
     }
 
-    map<char, int> dominadores_por_vertice;
+    set<char> nao_cobertos;
     for (No *no : this->lista_adj)
     {
-        dominadores_por_vertice[no->id] = 0;
+        nao_cobertos.insert(no->id);
     }
 
-    set<char> vertices_nao_satisfeitos;
-    for (No *no : this->lista_adj)
-    {
-        vertices_nao_satisfeitos.insert(no->id);
-    }
-
-    while (!vertices_nao_satisfeitos.empty())
+    while (!nao_cobertos.empty())
     {
         char melhor_vertice_para_adicionar = 0;
         int max_score = -1;
 
-        for (No *candidato_no : this->lista_adj) //itera por todos os vértices para encontrar o melhor candidato
+        for (No *candidato_no : this->lista_adj)
         {
             char id_candidato = candidato_no->id;
-            if (D_set.count(id_candidato))
+
+            if (nao_cobertos.find(id_candidato) == nao_cobertos.end())
             {
                 continue;
             }
 
-            int score_atual = 0;
-            if (vertices_nao_satisfeitos.count(id_candidato))
-            {
-                score_atual++;
-            }
+            set<char> cobertos_pelo_candidato;
+            vector<char> vizinhos_dist1;
+
+            cobertos_pelo_candidato.insert(id_candidato);
+
             for (Aresta *aresta : this->arestas)
             {
-                char id_vizinho = 0;
                 if (aresta->id_no_origem == id_candidato)
-                    id_vizinho = aresta->id_no_alvo;
-                else if (!this->in_direcionado && aresta->id_no_alvo == id_candidato)
-                    id_vizinho = aresta->id_no_origem;
-
-                if (id_vizinho != 0 && vertices_nao_satisfeitos.count(id_vizinho))
                 {
-                    if (dominadores_por_vertice[id_vizinho] < 2)
+                    cobertos_pelo_candidato.insert(aresta->id_no_alvo);
+                    vizinhos_dist1.push_back(aresta->id_no_alvo);
+                }
+                else if (!this->in_direcionado && aresta->id_no_alvo == id_candidato)
+                {
+                    cobertos_pelo_candidato.insert(aresta->id_no_origem);
+                    vizinhos_dist1.push_back(aresta->id_no_origem);
+                }
+            }
+
+            for (char id_vizinho1 : vizinhos_dist1)
+            {
+                for (Aresta *aresta : this->arestas)
+                {
+                    if (aresta->id_no_origem == id_vizinho1)
                     {
-                        score_atual++;
+                        cobertos_pelo_candidato.insert(aresta->id_no_alvo);
                     }
+                    else if (!this->in_direcionado && aresta->id_no_alvo == id_vizinho1)
+                    {
+                        cobertos_pelo_candidato.insert(aresta->id_no_origem);
+                    }
+                }
+            }
+
+            int score_atual = 0;
+            for (char id_coberto : cobertos_pelo_candidato)
+            {
+                if (nao_cobertos.count(id_coberto))
+                {
+                    score_atual++;
                 }
             }
 
@@ -821,59 +841,76 @@ vector<char> Grafo::conjunto_2_dominante_guloso()
 
         if (melhor_vertice_para_adicionar == 0)
         {
-
-            if (!vertices_nao_satisfeitos.empty())
+            if (!nao_cobertos.empty())
             {
-                melhor_vertice_para_adicionar = *vertices_nao_satisfeitos.begin();
+                melhor_vertice_para_adicionar = *nao_cobertos.begin();
             }
             else
             {
-                break; // Todos satisfeitos
+                break;
             }
         }
 
-        D_set.insert(melhor_vertice_para_adicionar);
+        D.push_back(melhor_vertice_para_adicionar);
 
+        set<char> para_remover;
+        vector<char> vizinhos_dist1;
+        para_remover.insert(melhor_vertice_para_adicionar);
         for (Aresta *aresta : this->arestas)
         {
             if (aresta->id_no_origem == melhor_vertice_para_adicionar)
             {
-                dominadores_por_vertice[aresta->id_no_alvo]++;
+                para_remover.insert(aresta->id_no_alvo);
+                vizinhos_dist1.push_back(aresta->id_no_alvo);
             }
             else if (!this->in_direcionado && aresta->id_no_alvo == melhor_vertice_para_adicionar)
             {
-                dominadores_por_vertice[aresta->id_no_origem]++;
+                para_remover.insert(aresta->id_no_origem);
+                vizinhos_dist1.push_back(aresta->id_no_origem);
             }
         }
-
-        vector<char> para_remover;
-        for (char id_nao_satisfeito : vertices_nao_satisfeitos)
+        for (char id_vizinho1 : vizinhos_dist1)
         {
-            if (D_set.count(id_nao_satisfeito) || dominadores_por_vertice[id_nao_satisfeito] >= 2)
+            for (Aresta *aresta : this->arestas)
             {
-                para_remover.push_back(id_nao_satisfeito);
+                if (aresta->id_no_origem == id_vizinho1)
+                {
+                    para_remover.insert(aresta->id_no_alvo);
+                }
+                else if (!this->in_direcionado && aresta->id_no_alvo == id_vizinho1)
+                {
+                    para_remover.insert(aresta->id_no_origem);
+                }
             }
         }
 
         for (char id_remover : para_remover)
         {
-            vertices_nao_satisfeitos.erase(id_remover);
+            nao_cobertos.erase(id_remover);
         }
     }
 
-    vector<char> D(D_set.begin(), D_set.end());
+    sort(D.begin(), D.end());
     return D;
 }
 
-//LOGICA PARA TORNAR ESSE ALGORITMO GULOSO RANDOMIZADO ADAPTATIVO:
-//1. Criação de uma func principal que gerencia as iterações e chama a construção e a busca local.
-//2. Calcular o score de todos os candidatos, filtra-los para criar uma lista de candidatos restrita, que armazena um subconjunto dos melhores candidatos.
-//3. Um dos candidatos da lista é escolhido aleatoriamente.
-//4. Fazer uma busca local para tentar reduzir o conjunto, removendo vértices um a um, desde que a validade do conjunto seja mantida.
-//Nesse algoritmo, iremos definir uma variável alfa que seta quão guloso o algoritmo vai ser.
+// LOGICA PARA TORNAR ESSE ALGORITMO GULOSO RANDOMIZADO ADAPTATIVO:
+// O algoritmo executa um laço principal N vezes. Em cada iteração, ele seleciona um 'alfa',
+// constrói uma solução via GRASP, e atualiza as probabilidades dos 'alfas'. No final,
+// retorna a melhor solução encontrada entre todas as N execuções.
+// 1. Lista de Candidatos Restrita (RCL): Em vez de escolher sempre o melhor candidato,
+//    o algoritmo primeiro monta uma lista (RCL) com os candidatos de "alta qualidade".
+// 2. Parâmetro Alfa: Um candidato entra na RCL se seu score for bom o suficiente,
+//    geralmente definido por um limiar (threshold) controlado por um parâmetro 'alfa'.
+// 3. Escolha Aleatória: Um candidato é selecionado aleatoriamente DENTRO da RCL. Isso
+//    permite que o algoritmo explore diferentes caminhos a cada execução.
+// 4. Autoajuste do Alfa: O valor de alfa não é fixo. O algoritmo testa um conjunto
+//    de valores de 'alfa' pré-definidos (ex: {0.7, 0.8, 0.9}).
+// 5. Feedback e Aprendizado: O algoritmo armazena o histórico de desempenho de cada 'alfa'.
+//    Valores de 'alfa' que produziram soluções melhores no passado têm sua probabilidade
+//    de serem escolhidos em futuras iterações aumentada.
 
-//LOGICA PARA TORNAR ESSE ALGORITMO GULOSO RANDOMIZADO ADAPTATIVO REATIVO:
-//1. Definir um Conjunto de Alfas: Em vez de um único alfa, trabalhamos com um conjunto de valores possíveis. Por exemplo: {0.1, 0.2, 0.3, 0.4, 0.5}.
-//2. Atribuir Probabilidades: Cada alfa do conjunto terá uma probabilidade de ser escolhido. No início, todas as probabilidades são iguais (distribuição uniforme).
-//3. A cada nova iteração, em vez de usar um alfa fixo, o algoritmo sorteia um alfa do nosso conjunto, usando as probabilidades atuais.
-//4. ...
+// LOGICA PARA TORNAR ESSE ALGORITMO GULOSO RANDOMIZADO ADAPTATIVO REATIVO:
+// 1. Criação da Lista de Candidatos Restrita
+// 2. Escolha Aleatória: A cada nova iteração, em vez de usar um alfa fixo, o algoritmo sorteia um alfa do nosso conjunto, usando as probabilidades atuais.
+// 3. ...

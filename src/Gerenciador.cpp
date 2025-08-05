@@ -16,7 +16,7 @@ void Gerenciador::comandos(Grafo *grafo)
     cout << "(f) Arvore Geradora Minima (Algoritmo de Kruskal);" << endl;
     cout << "(g) Arvore de caminhamento em profundidade;" << endl;
     cout << "(h) Raio, diametro, centro e periferia do grafo;" << endl;
-    cout << "(i) Encontrar um Conjunto 2-Dominante (heuristica gulosa);" << endl; 
+    cout << "(i) Conjunto Dominante de Distancia 2 (heuristica gulosa);" << endl;
 
     cout << "(0) Sair;" << endl
          << endl;
@@ -387,15 +387,15 @@ void Gerenciador::comandos(Grafo *grafo)
 
     case 'i':
     {
-        vector<char> c2d = grafo->conjunto_2_dominante_guloso();
-        cout << "Conjunto 2-Dominante (heuristica gulosa): { ";
-        if (c2d.empty())
+        vector<char> cdd2 = grafo->conjunto_dominante_distancia2_guloso();
+        cout << "Conjunto Dominante de Distancia 2 (heuristica gulosa): { ";
+        if (cdd2.empty())
         {
             cout << "Nenhum";
         }
         else
         {
-            for (char id : c2d)
+            for (char id : cdd2)
             {
                 cout << id << " ";
             }
@@ -403,29 +403,27 @@ void Gerenciador::comandos(Grafo *grafo)
         cout << "}" << endl
              << endl;
 
-
-        if (pergunta_imprimir_arquivo("conjunto_2_dominante.txt"))
+        if (pergunta_imprimir_arquivo("conjunto_dominante_dist2.txt"))
         {
-            ofstream out("conjunto_2_dominante.txt");
-            out << "Conjunto 2-Dominante (heuristica gulosa): { ";
-            if (c2d.empty())
+            ofstream out("conjunto_dominante_dist2.txt");
+            out << "Conjunto Dominante de Distancia 2 (heuristica gulosa): { ";
+            if (cdd2.empty())
             {
                 out << "Nenhum";
             }
             else
             {
-                for (char id : c2d)
+                for (char id : cdd2)
                 {
                     out << id << " ";
                 }
             }
             out << "}" << endl;
             out.close();
-            cout << "Conjunto 2-Dominante salvo em conjunto_2_dominante.txt\n\n";
+            cout << "Conjunto salvo em conjunto_dominante_dist2.txt\n\n";
         }
         break;
     }
-
 
     case '0':
     {
