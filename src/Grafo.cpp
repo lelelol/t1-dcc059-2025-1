@@ -7,6 +7,7 @@
 #include <functional>
 #include <set>
 
+
 Grafo::Grafo()
 {
 }
@@ -750,12 +751,18 @@ vector<char> Grafo::periferia()
     return periferia_nodes;
 }
 
+//Encontrar um subconjunto de vértices D de um grafo, tal que todo vértice v que não está em D seja adjacente a pelo menos dois vértices em D
+//D: Conjunto dominante
+//dominadores_por_vertice: Armazena, para cada vértice do gŕafico, quantos de seus vizinhos já foram armazenados em D.
+//vertices_nao_satisfeitos: Contém todos os vértices que ainda não cumprem a condição de 2-dominação (ou seja, não estão em D e não têm pelo menos 2 vizinhos em D). O algoritmo termina quando esta lista fica vazia.
+//Quanto melhor for a adição daquele vértice pro algoritmo, maior sera o seu score
+//Iremos acrescentar uma função que verifica se o grafo resultante realmente resolve o problema
 vector<char> Grafo::conjunto_2_dominante_guloso()
 {
-    vector<char> D;
+    set<char> D_set;
     if (this->ordem == 0)
     {
-        return D;
+        return {};
     }
 
     map<char, int> dominadores_por_vertice;
@@ -775,11 +782,10 @@ vector<char> Grafo::conjunto_2_dominante_guloso()
         char melhor_vertice_para_adicionar = 0;
         int max_score = -1;
 
-        for (No *candidato_no : this->lista_adj)
+        for (No *candidato_no : this->lista_adj) //itera por todos os vértices para encontrar o melhor candidato
         {
             char id_candidato = candidato_no->id;
-            bool ja_em_D = find(D.begin(), D.end(), id_candidato) != D.end();
-            if (ja_em_D)
+            if (D_set.count(id_candidato))
             {
                 continue;
             }
@@ -826,7 +832,7 @@ vector<char> Grafo::conjunto_2_dominante_guloso()
             }
         }
 
-        D.push_back(melhor_vertice_para_adicionar);
+        D_set.insert(melhor_vertice_para_adicionar);
 
         for (Aresta *aresta : this->arestas)
         {
@@ -843,8 +849,7 @@ vector<char> Grafo::conjunto_2_dominante_guloso()
         vector<char> para_remover;
         for (char id_nao_satisfeito : vertices_nao_satisfeitos)
         {
-            bool esta_em_D = find(D.begin(), D.end(), id_nao_satisfeito) != D.end();
-            if (esta_em_D || dominadores_por_vertice[id_nao_satisfeito] >= 2)
+            if (D_set.count(id_nao_satisfeito) || dominadores_por_vertice[id_nao_satisfeito] >= 2)
             {
                 para_remover.push_back(id_nao_satisfeito);
             }
@@ -856,6 +861,19 @@ vector<char> Grafo::conjunto_2_dominante_guloso()
         }
     }
 
-    sort(D.begin(), D.end());
+    vector<char> D(D_set.begin(), D_set.end());
     return D;
 }
+
+//LOGICA PARA TORNAR ESSE ALGORITMO GULOSO RANDOMIZADO ADAPTATIVO:
+//1. Criação de uma func principal que gerencia as iterações e chama a construção e a busca local.
+//2. Calcular o score de todos os candidatos, filtra-los para criar uma lista de candidatos restrita, que armazena um subconjunto dos melhores candidatos.
+//3. Um dos candidatos da lista é escolhido aleatoriamente.
+//4. Fazer uma busca local para tentar reduzir o conjunto, removendo vértices um a um, desde que a validade do conjunto seja mantida.
+//Nesse algoritmo, iremos definir uma variável alfa que seta quão guloso o algoritmo vai ser.
+
+//LOGICA PARA TORNAR ESSE ALGORITMO GULOSO RANDOMIZADO ADAPTATIVO REATIVO:
+//1. Definir um Conjunto de Alfas: Em vez de um único alfa, trabalhamos com um conjunto de valores possíveis. Por exemplo: {0.1, 0.2, 0.3, 0.4, 0.5}.
+//2. Atribuir Probabilidades: Cada alfa do conjunto terá uma probabilidade de ser escolhido. No início, todas as probabilidades são iguais (distribuição uniforme).
+//3. A cada nova iteração, em vez de usar um alfa fixo, o algoritmo sorteia um alfa do nosso conjunto, usando as probabilidades atuais.
+//4. ...

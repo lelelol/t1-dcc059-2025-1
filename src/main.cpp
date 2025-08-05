@@ -5,6 +5,7 @@
 #include "Grafo.h"
 #include "Gerenciador.h"
 
+
 using namespace std;
 
 int main(int argc, char *argv[])

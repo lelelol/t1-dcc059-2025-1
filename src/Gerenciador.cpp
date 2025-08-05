@@ -16,7 +16,7 @@ void Gerenciador::comandos(Grafo *grafo)
     cout << "(f) Arvore Geradora Minima (Algoritmo de Kruskal);" << endl;
     cout << "(g) Arvore de caminhamento em profundidade;" << endl;
     cout << "(h) Raio, diametro, centro e periferia do grafo;" << endl;
-    cout << "(i) Encontrar um Conjunto 2-Dominante (heuristica gulosa);" << endl; // <-- NOVA OPÇÃO
+    cout << "(i) Encontrar um Conjunto 2-Dominante (heuristica gulosa);" << endl; 
 
     cout << "(0) Sair;" << endl
          << endl;
@@ -403,6 +403,7 @@ void Gerenciador::comandos(Grafo *grafo)
         cout << "}" << endl
              << endl;
 
+
         if (pergunta_imprimir_arquivo("conjunto_2_dominante.txt"))
         {
             ofstream out("conjunto_2_dominante.txt");
@@ -424,6 +425,7 @@ void Gerenciador::comandos(Grafo *grafo)
         }
         break;
     }
+
 
     case '0':
     {
