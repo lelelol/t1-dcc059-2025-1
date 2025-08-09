@@ -17,6 +17,8 @@ void Gerenciador::comandos(Grafo *grafo)
     cout << "(g) Arvore de caminhamento em profundidade;" << endl;
     cout << "(h) Raio, diametro, centro e periferia do grafo;" << endl;
     cout << "(i) Conjunto Dominante de Distancia 2 (heuristica gulosa);" << endl;
+    cout << "(j) Conjunto Dominante de Distancia 2 - guloso randomizado" << endl;
+    cout << "(k) Conjunto Dominante de Distancia 2 - guloso randomizado adaptativo" << endl;
 
     cout << "(0) Sair;" << endl
          << endl;
@@ -424,6 +426,112 @@ void Gerenciador::comandos(Grafo *grafo)
         }
         break;
     }
+
+    case 'j':
+    {
+        float alpha;
+        cout << "Digite o valor de alpha (entre 0.0 e 1.0): ";
+        cin >> alpha;
+        while (cin.fail() || alpha < 0.0f || alpha > 1.0f)
+        {
+            cout << "Entrada invalida. Digite um valor entre 0.0 e 1.0: ";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin >> alpha;
+        }
+
+        vector<char> cdd2_rand = grafo->conjunto_dominante_distancia2_guloso_randomizado(alpha);
+        cout << "Conjunto Dominante de Distancia 2 (guloso randomizado com alpha=" << alpha << "): { ";
+        if (cdd2_rand.empty())
+        {
+            cout << "Nenhum";
+        }
+        else
+        {
+            for (char id : cdd2_rand)
+            {
+                cout << id << " ";
+            }
+        }
+        cout << "}" << endl
+             << endl;
+
+        if (pergunta_imprimir_arquivo("conjunto_dominante_dist2_rand.txt"))
+        {
+            ofstream out("conjunto_dominante_dist2_rand.txt");
+            out << "Conjunto Dominante de Distancia 2 (guloso randomizado com alpha=" << alpha << "): { ";
+            if (cdd2_rand.empty())
+            {
+                out << "Nenhum";
+            }
+            else
+            {
+                for (char id : cdd2_rand)
+                {
+                    out << id << " ";
+                }
+            }
+            out << "}" << endl;
+            out.close();
+            cout << "Conjunto salvo em conjunto_dominante_dist2_rand.txt\n\n";
+        }
+        break;
+    }
+
+    case 'k':
+    {
+        int max_iter, block_size;
+        cout << "Digite o numero maximo de iteracoes: ";
+        cin >> max_iter;
+        while (cin.fail() || max_iter <= 0)
+        {
+            cout << "Entrada invalida. Digite um inteiro positivo: ";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin >> max_iter;
+        }
+
+        cout << "Digite o tamanho do bloco para atualizacao reativa: ";
+        cin >> block_size;
+        while (cin.fail() || block_size <= 0 || block_size > max_iter)
+        {
+            cout << "Entrada invalida. Digite um inteiro positivo menor ou igual ao numero de iteracoes: ";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin >> block_size;
+        }
+
+        vector<char> cdd2_react = grafo->conjunto_dominante_grasp_reativo(max_iter, block_size);
+        cout << "\nResultado Final - Melhor Conjunto Dominante (GRASP Reativo): { ";
+        if (cdd2_react.empty())
+        {
+            cout << "Nenhum";
+        }
+        else
+        {
+            for (char id : cdd2_react)
+            {
+                cout << id << " ";
+            }
+        }
+        cout << "}" << endl
+             << endl;
+
+        if (pergunta_imprimir_arquivo("conjunto_dominante_grasp_reativo.txt"))
+        {
+            ofstream out("conjunto_dominante_grasp_reativo.txt");
+            out << "Melhor Conjunto Dominante (GRASP Reativo): { ";
+            for (char id : cdd2_react)
+            {
+                out << id << " ";
+            }
+            out << "}" << endl;
+            out.close();
+            cout << "Conjunto salvo em conjunto_dominante_grasp_reativo.txt\n\n";
+        }
+        break;
+    }
+
 
     case '0':
     {

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <set>
 
 using namespace std;
 class Grafo
@@ -29,6 +30,8 @@ public:
     vector<char> centro();                                            // h 3
     vector<char> periferia();                                         // h 4
     vector<char> conjunto_dominante_distancia2_guloso();              // i
+    vector<char> conjunto_dominante_distancia2_guloso_randomizado(float alpha); //j
+    vector<char> conjunto_dominante_grasp_reativo(int max_iteracoes, int tamanho_bloco_atualizacao); //k
     void imprimirListaAdjacencias();
     No *getNoPorId(char id);
     int ordem;
@@ -41,6 +44,10 @@ public:
 private:
     void dfs_inverso(char id_atual, map<char, bool> &visitados);
     map<char, map<char, int>> calcularTodasDistancias(); // auxiliar para diametro e raio
+    int calcular_score_distancia2(char id_candidato, const set<char>& nao_cobertos) const;
+    std::set<char> obter_cobertura_distancia2(char id_vertice) const;
+    bool is_solucao_valida(const vector<char>& solucao) const;
+    void refinar_solucao_localmente(vector<char>& solucao) const;
 };
 
 #endif // GRAFO_H

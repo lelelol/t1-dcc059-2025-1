@@ -6,6 +6,8 @@
 #include <vector>
 #include <functional>
 #include <set>
+#include <numeric>
+#include <random>
 
 Grafo::Grafo()
 {
@@ -750,142 +752,45 @@ vector<char> Grafo::periferia()
     return periferia_nodes;
 }
 
-// Encontrar um subconjunto de vértices D tal que todo vértice fora de D esteja
-// a uma distância máxima de 2 de, pelo menos, um vértice que está em D.
-//
-// 1. D: O conjunto de "dominadores" que o algoritmo constrói passo a passo.
-// 2. nao_cobertos: Controla os vértices que ainda precisam de cobertura. O algoritmo
-//    só termina quando este conjunto fica vazio.
-// 3. CRITÉRIO GULOSO: A cada iteração, escolhe-se o vértice com o maior "score".
-// 4. SCORE: É o número de vértices em 'nao_cobertos' que um candidato consegue
-//    alcançar (em distância 0, 1 ou 2).
-//
-// PENDENTE: Implementar uma função de verificação para validar o resultado.
-vector<char> Grafo::conjunto_dominante_distancia2_guloso()
-{
-    vector<char> D;
-    if (this->ordem == 0)
-    {
+//---------------------------------------------------------- TRABALHO 2 -------------------------------------------------------
+
+vector<char> Grafo::conjunto_dominante_distancia2_guloso(){
+    vector<char> D; 
+    if (this->ordem == 0) {
         return D;
     }
 
-    set<char> nao_cobertos;
-    for (No *no : this->lista_adj)
-    {
+    std::set<char> nao_cobertos; 
+    for (No *no : this->lista_adj) {
         nao_cobertos.insert(no->id);
     }
 
-    while (!nao_cobertos.empty())
-    {
+    while (!nao_cobertos.empty()) {
         char melhor_vertice_para_adicionar = 0;
         int max_score = -1;
 
-        for (No *candidato_no : this->lista_adj)
-        {
-            char id_candidato = candidato_no->id;
+        for (No *candidato_no : this->lista_adj) {
+            int score_atual = this->calcular_score_distancia2(candidato_no->id, nao_cobertos);
 
-            if (nao_cobertos.find(id_candidato) == nao_cobertos.end())
-            {
-                continue;
-            }
-
-            set<char> cobertos_pelo_candidato;
-            vector<char> vizinhos_dist1;
-
-            cobertos_pelo_candidato.insert(id_candidato);
-
-            for (Aresta *aresta : this->arestas)
-            {
-                if (aresta->id_no_origem == id_candidato)
-                {
-                    cobertos_pelo_candidato.insert(aresta->id_no_alvo);
-                    vizinhos_dist1.push_back(aresta->id_no_alvo);
-                }
-                else if (!this->in_direcionado && aresta->id_no_alvo == id_candidato)
-                {
-                    cobertos_pelo_candidato.insert(aresta->id_no_origem);
-                    vizinhos_dist1.push_back(aresta->id_no_origem);
-                }
-            }
-
-            for (char id_vizinho1 : vizinhos_dist1)
-            {
-                for (Aresta *aresta : this->arestas)
-                {
-                    if (aresta->id_no_origem == id_vizinho1)
-                    {
-                        cobertos_pelo_candidato.insert(aresta->id_no_alvo);
-                    }
-                    else if (!this->in_direcionado && aresta->id_no_alvo == id_vizinho1)
-                    {
-                        cobertos_pelo_candidato.insert(aresta->id_no_origem);
-                    }
-                }
-            }
-
-            int score_atual = 0;
-            for (char id_coberto : cobertos_pelo_candidato)
-            {
-                if (nao_cobertos.count(id_coberto))
-                {
-                    score_atual++;
-                }
-            }
-
-            if (score_atual > max_score)
-            {
+            if (score_atual > max_score) {
                 max_score = score_atual;
-                melhor_vertice_para_adicionar = id_candidato;
+                melhor_vertice_para_adicionar = candidato_no->id;
             }
         }
 
-        if (melhor_vertice_para_adicionar == 0)
-        {
-            if (!nao_cobertos.empty())
-            {
+        if (melhor_vertice_para_adicionar == 0) {
+            if (!nao_cobertos.empty()) {
                 melhor_vertice_para_adicionar = *nao_cobertos.begin();
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
 
         D.push_back(melhor_vertice_para_adicionar);
 
-        set<char> para_remover;
-        vector<char> vizinhos_dist1;
-        para_remover.insert(melhor_vertice_para_adicionar);
-        for (Aresta *aresta : this->arestas)
-        {
-            if (aresta->id_no_origem == melhor_vertice_para_adicionar)
-            {
-                para_remover.insert(aresta->id_no_alvo);
-                vizinhos_dist1.push_back(aresta->id_no_alvo);
-            }
-            else if (!this->in_direcionado && aresta->id_no_alvo == melhor_vertice_para_adicionar)
-            {
-                para_remover.insert(aresta->id_no_origem);
-                vizinhos_dist1.push_back(aresta->id_no_origem);
-            }
-        }
-        for (char id_vizinho1 : vizinhos_dist1)
-        {
-            for (Aresta *aresta : this->arestas)
-            {
-                if (aresta->id_no_origem == id_vizinho1)
-                {
-                    para_remover.insert(aresta->id_no_alvo);
-                }
-                else if (!this->in_direcionado && aresta->id_no_alvo == id_vizinho1)
-                {
-                    para_remover.insert(aresta->id_no_origem);
-                }
-            }
-        }
+        std::set<char> para_remover = this->obter_cobertura_distancia2(melhor_vertice_para_adicionar);
 
-        for (char id_remover : para_remover)
-        {
+        for (char id_remover : para_remover) {
             nao_cobertos.erase(id_remover);
         }
     }
@@ -894,23 +799,241 @@ vector<char> Grafo::conjunto_dominante_distancia2_guloso()
     return D;
 }
 
-// LOGICA PARA TORNAR ESSE ALGORITMO GULOSO RANDOMIZADO ADAPTATIVO:
-// O algoritmo executa um laço principal N vezes. Em cada iteração, ele seleciona um 'alfa',
-// constrói uma solução via GRASP, e atualiza as probabilidades dos 'alfas'. No final,
-// retorna a melhor solução encontrada entre todas as N execuções.
-// 1. Lista de Candidatos Restrita (RCL): Em vez de escolher sempre o melhor candidato,
-//    o algoritmo primeiro monta uma lista (RCL) com os candidatos de "alta qualidade".
-// 2. Parâmetro Alfa: Um candidato entra na RCL se seu score for bom o suficiente,
-//    geralmente definido por um limiar (threshold) controlado por um parâmetro 'alfa'.
-// 3. Escolha Aleatória: Um candidato é selecionado aleatoriamente DENTRO da RCL. Isso
-//    permite que o algoritmo explore diferentes caminhos a cada execução.
-// 4. Autoajuste do Alfa: O valor de alfa não é fixo. O algoritmo testa um conjunto
-//    de valores de 'alfa' pré-definidos (ex: {0.7, 0.8, 0.9}).
-// 5. Feedback e Aprendizado: O algoritmo armazena o histórico de desempenho de cada 'alfa'.
-//    Valores de 'alfa' que produziram soluções melhores no passado têm sua probabilidade
-//    de serem escolhidos em futuras iterações aumentada.
+vector<char> Grafo::conjunto_dominante_distancia2_guloso_randomizado(float alpha) {
+    if (alpha < 0.0f || alpha > 1.0f) {
+        throw invalid_argument("O parâmetro alpha deve estar entre 0.0 e 1.0.");
+    }
+    
+    vector<char> D;
+    if (this->ordem == 0) {
+        return D;
+    }
 
-// LOGICA PARA TORNAR ESSE ALGORITMO GULOSO RANDOMIZADO ADAPTATIVO REATIVO:
-// 1. Criação da Lista de Candidatos Restrita
-// 2. Escolha Aleatória: A cada nova iteração, em vez de usar um alfa fixo, o algoritmo sorteia um alfa do nosso conjunto, usando as probabilidades atuais.
-// 3. ...
+    std::set<char> nao_cobertos;
+    for (No *no : this->lista_adj) {
+        nao_cobertos.insert(no->id);
+    }
+
+    mt19937 gerador_aleatorio(random_device{}());
+
+    while (!nao_cobertos.empty()) {
+        vector<pair<char, int>> scores_dos_candidatos;
+        int max_score = 0;
+
+        for (No *candidato_no : this->lista_adj) {
+            int score_atual = this->calcular_score_distancia2(candidato_no->id, nao_cobertos);
+
+            if (score_atual > 0) {
+                scores_dos_candidatos.push_back({candidato_no->id, score_atual});
+            }
+            if (score_atual > max_score) {
+                max_score = score_atual;
+            }
+        }
+        
+        vector<char> rcl;
+        char melhor_vertice_para_adicionar = 0;
+
+        if (max_score > 0) {
+            float limite_score = alpha * max_score;
+            for (const auto& par : scores_dos_candidatos) {
+                if (par.second >= limite_score) {
+                    rcl.push_back(par.first);
+                }
+            }
+        }
+        
+        if (!rcl.empty()) {
+            uniform_int_distribution<> distrib(0, rcl.size() - 1);
+            melhor_vertice_para_adicionar = rcl[distrib(gerador_aleatorio)];
+        } else {
+            if (!nao_cobertos.empty()) {
+                 uniform_int_distribution<> distrib(0, nao_cobertos.size() - 1);
+                 auto it = nao_cobertos.begin();
+                 advance(it, distrib(gerador_aleatorio));
+                 melhor_vertice_para_adicionar = *it;
+            } else {
+                break; 
+            }
+        }
+        
+        D.push_back(melhor_vertice_para_adicionar);
+        
+        std::set<char> para_remover = this->obter_cobertura_distancia2(melhor_vertice_para_adicionar);
+
+        for (char id_remover : para_remover) {
+            nao_cobertos.erase(id_remover);
+        }
+    }
+
+    sort(D.begin(), D.end());
+    return D;
+}
+
+vector<char> Grafo::conjunto_dominante_grasp_reativo(int max_iteracoes, int tamanho_bloco_atualizacao) {
+    vector<float> alphas_disponiveis = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f};
+    int num_alphas = alphas_disponiveis.size();
+
+    vector<double> probabilidades(num_alphas, 1.0 / num_alphas);
+    vector<double> soma_qualidade_solucoes(num_alphas, 0.0);
+    vector<int> contador_usos(num_alphas, 0);
+
+    vector<char> melhor_solucao_global;
+    size_t melhor_custo_global = -1; // Equivalente a infinito
+
+    mt19937 gerador_aleatorio(random_device{}());
+
+    for (int i = 0; i < max_iteracoes; ++i) {
+        // a. Seleciona um alpha com base nas probabilidades atuais
+        discrete_distribution<> dist_alphas(probabilidades.begin(), probabilidades.end());
+        int indice_alpha_escolhido = dist_alphas(gerador_aleatorio);
+        float alpha_atual = alphas_disponiveis[indice_alpha_escolhido];
+
+        //usa o GRASP padrão com o alpha escolhido
+        vector<char> solucao_construida = this->conjunto_dominante_distancia2_guloso_randomizado(alpha_atual);
+
+        //refina a solução construída
+        this->refinar_solucao_localmente(solucao_construida);
+
+        //Atualiza a melhor solução global encontrada até agora
+        if (solucao_construida.size() < melhor_custo_global) {
+            melhor_custo_global = solucao_construida.size();
+            melhor_solucao_global = solucao_construida;
+            cout << "Iteração " << i << ": Nova melhor solução encontrada com custo " << melhor_custo_global << " (usando alpha=" << alpha_atual << ")" << endl;
+        }
+        
+        //Registra o desempenho do alpha utilizado
+        soma_qualidade_solucoes[indice_alpha_escolhido] += solucao_construida.size();
+        contador_usos[indice_alpha_escolhido]++;
+
+        //Atualização Reativa das Probabilidades (a cada bloco de iterações)
+        if ((i + 1) % tamanho_bloco_atualizacao == 0) {
+            double soma_total_q = 0;
+            vector<double> q(num_alphas);
+
+            for (int j = 0; j < num_alphas; ++j) {
+                if (contador_usos[j] > 0) {
+                    double media_custo = soma_qualidade_solucoes[j] / contador_usos[j];
+                    // A qualidade é o inverso do custo médio (melhor custo -> maior qualidade)
+                    q[j] = 1.0 / media_custo;
+                } else {
+                    q[j] = 0; // Se nunca foi usado, não tem qualidade
+                }
+                soma_total_q += q[j];
+            }
+            
+            if (soma_total_q > 0) {
+                for (int j = 0; j < num_alphas; ++j) {
+                    probabilidades[j] = q[j] / soma_total_q;
+                }
+            } else {
+                // Se nenhum alpha produziu resultado (raro), reseta para uniforme
+                 for (int j = 0; j < num_alphas; ++j) {
+                    probabilidades[j] = 1.0 / num_alphas;
+                }
+            }
+        }
+    }
+
+    sort(melhor_solucao_global.begin(), melhor_solucao_global.end());
+    return melhor_solucao_global;
+}
+
+
+//------------------------------ FUNÇÕES AUXILIARES PARA ALGORITMO GULOSO ----------------------
+
+//Retorna o conjunto de vértices cobertos a uma distância de até 2 de um vértice.
+std::set<char> Grafo::obter_cobertura_distancia2(char id_vertice) const {
+    std::set<char> cobertos;
+    vector<char> vizinhos_dist1;
+
+    // Distância 0
+    cobertos.insert(id_vertice);
+
+    // Distância 1
+    for (Aresta *aresta : this->arestas) {
+        if (aresta->id_no_origem == id_vertice) {
+            vizinhos_dist1.push_back(aresta->id_no_alvo);
+        } else if (!this->in_direcionado && aresta->id_no_alvo == id_vertice) {
+            vizinhos_dist1.push_back(aresta->id_no_origem);
+        }
+    }
+    cobertos.insert(vizinhos_dist1.begin(), vizinhos_dist1.end());
+
+    // Distância 2
+    for (char id_vizinho1 : vizinhos_dist1) {
+        for (Aresta *aresta : this->arestas) {
+            if (aresta->id_no_origem == id_vizinho1) {
+                cobertos.insert(aresta->id_no_alvo);
+            } else if (!this->in_direcionado && aresta->id_no_alvo == id_vizinho1) {
+                cobertos.insert(aresta->id_no_origem);
+            }
+        }
+    }
+    return cobertos;
+}
+
+
+//Calcula quantos vértices AINDA NÃO COBERTOS um candidato consegue cobrir.
+int Grafo::calcular_score_distancia2(char id_candidato, const std::set<char>& nao_cobertos) const {
+    //Todos os vértices que o candidato pode cobrir.
+    std::set<char> cobertos_pelo_candidato = this->obter_cobertura_distancia2(id_candidato);
+
+    //Conta quantos desses estão na lista de 'nao_cobertos'.
+    int score = 0;
+    for (char id_coberto : cobertos_pelo_candidato) {
+        if (nao_cobertos.count(id_coberto)) {
+            score++;
+        }
+    }
+    return score;
+}
+
+//Verifica se um dado conjunto de vértices é um conjunto dominante de distância 2 válido.
+bool Grafo::is_solucao_valida(const vector<char>& solucao) const {
+    if (this->ordem == 0) return true;
+
+    std::set<char> cobertos;
+    for (char id_no_solucao : solucao) {
+        std::set<char> cobertura_parcial = this->obter_cobertura_distancia2(id_no_solucao);
+        cobertos.insert(cobertura_parcial.begin(), cobertura_parcial.end());
+    }
+
+    // Se o número de nós cobertos for igual à ordem do grafo, a solução é válida.
+    return cobertos.size() == this->ordem;
+}
+
+//Tenta refinar uma solução removendo vértices redundantes.
+void Grafo::refinar_solucao_localmente(vector<char>& solucao) const {
+    // Itera sobre uma cópia dos IDs para poder modificar o vetor original
+    vector<char> copia_solucao = solucao;
+    bool melhoria_encontrada = true;
+
+    while (melhoria_encontrada) {
+        melhoria_encontrada = false;
+        char no_para_remover = 0;
+
+        for (char id_no : copia_solucao) {
+            // Cria uma solução temporária sem o nó atual
+            vector<char> solucao_temp;
+            for(char v : copia_solucao) {
+                if (v != id_no) {
+                    solucao_temp.push_back(v);
+                }
+            }
+
+            // Se a solução temporária ainda for válida, encontramos uma melhoria
+            if (is_solucao_valida(solucao_temp)) {
+                no_para_remover = id_no;
+                melhoria_encontrada = true;
+                break; // Sai do laço interno para aplicar a remoção
+            }
+        }
+
+        if (melhoria_encontrada) {
+            // Remove o nó redundante da solução original e da cópia de trabalho
+            solucao.erase(remove(solucao.begin(), solucao.end(), no_para_remover), solucao.end());
+            copia_solucao = solucao;
+        }
+    }
+}
