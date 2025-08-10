@@ -3,6 +3,7 @@
 #include <limits>
 #include <vector>
 #include <iostream>
+#include <chrono>
 
 void Gerenciador::comandos(Grafo *grafo)
 {
@@ -389,7 +390,15 @@ void Gerenciador::comandos(Grafo *grafo)
 
     case 'i':
     {
+        // Inicia a medição de tempo
+        auto inicio = chrono::high_resolution_clock::now();
+
         vector<char> cdd2 = grafo->conjunto_dominante_distancia2_guloso();
+
+        // Para a medição de tempo
+        auto fim = chrono::high_resolution_clock::now();
+        auto duracao = chrono::duration_cast<chrono::microseconds>(fim - inicio);
+
         cout << "Conjunto Dominante de Distancia 2 (heuristica gulosa): { ";
         if (cdd2.empty())
         {
@@ -402,7 +411,9 @@ void Gerenciador::comandos(Grafo *grafo)
                 cout << id << " ";
             }
         }
-        cout << "}" << endl
+        cout << "}" << endl;
+        cout << "Tempo de processamento: " << duracao.count() << " microssegundos ("
+             << duracao.count() / 1000.0 << " ms)" << endl
              << endl;
 
         if (pergunta_imprimir_arquivo("conjunto_dominante_dist2.txt"))
@@ -440,7 +451,15 @@ void Gerenciador::comandos(Grafo *grafo)
             cin >> alpha;
         }
 
+        // Inicia a medição de tempo após receber todas as entradas
+        auto inicio = chrono::high_resolution_clock::now();
+
         vector<char> cdd2_rand = grafo->conjunto_dominante_distancia2_guloso_randomizado(alpha);
+
+        // Para a medição de tempo
+        auto fim = chrono::high_resolution_clock::now();
+        auto duracao = chrono::duration_cast<chrono::microseconds>(fim - inicio);
+
         cout << "Conjunto Dominante de Distancia 2 (guloso randomizado com alpha=" << alpha << "): { ";
         if (cdd2_rand.empty())
         {
@@ -453,7 +472,9 @@ void Gerenciador::comandos(Grafo *grafo)
                 cout << id << " ";
             }
         }
-        cout << "}" << endl
+        cout << "}" << endl;
+        cout << "Tempo de processamento: " << duracao.count() << " microssegundos ("
+             << duracao.count() / 1000.0 << " ms)" << endl
              << endl;
 
         if (pergunta_imprimir_arquivo("conjunto_dominante_dist2_rand.txt"))
@@ -501,7 +522,13 @@ void Gerenciador::comandos(Grafo *grafo)
             cin >> block_size;
         }
 
+        auto inicio = chrono::high_resolution_clock::now();
+
         vector<char> cdd2_react = grafo->conjunto_dominante_grasp_reativo(max_iter, block_size);
+
+        auto fim = chrono::high_resolution_clock::now();
+        auto duracao = chrono::duration_cast<chrono::microseconds>(fim - inicio);
+
         cout << "\nResultado Final - Melhor Conjunto Dominante (GRASP Reativo): { ";
         if (cdd2_react.empty())
         {
@@ -514,7 +541,9 @@ void Gerenciador::comandos(Grafo *grafo)
                 cout << id << " ";
             }
         }
-        cout << "}" << endl
+        cout << "}" << endl;
+        cout << "Tempo de processamento: " << duracao.count() << " microssegundos ("
+             << duracao.count() / 1000.0 << " ms)" << endl
              << endl;
 
         if (pergunta_imprimir_arquivo("conjunto_dominante_grasp_reativo.txt"))
@@ -531,7 +560,6 @@ void Gerenciador::comandos(Grafo *grafo)
         }
         break;
     }
-
 
     case '0':
     {
