@@ -390,12 +390,10 @@ void Gerenciador::comandos(Grafo *grafo)
 
     case 'i':
     {
-        // Inicia a medição de tempo
         auto inicio = chrono::high_resolution_clock::now();
 
         vector<char> cdd2 = grafo->conjunto_dominante_distancia2_guloso();
 
-        // Para a medição de tempo
         auto fim = chrono::high_resolution_clock::now();
         auto duracao = chrono::duration_cast<chrono::microseconds>(fim - inicio);
 
@@ -451,12 +449,10 @@ void Gerenciador::comandos(Grafo *grafo)
             cin >> alpha;
         }
 
-        // Inicia a medição de tempo após receber todas as entradas
         auto inicio = chrono::high_resolution_clock::now();
 
         vector<char> cdd2_rand = grafo->conjunto_dominante_distancia2_guloso_randomizado(alpha);
 
-        // Para a medição de tempo
         auto fim = chrono::high_resolution_clock::now();
         auto duracao = chrono::duration_cast<chrono::microseconds>(fim - inicio);
 
